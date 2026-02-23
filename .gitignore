@@ -1,0 +1,15 @@
+# 1. Entornos virtuales (No queremos subir gigabytes de librerías a GitHub)
+venv/
+env/
+
+# 2. Archivos basura o de caché de Python (Se generan solos, no sirven de nada compartirlos)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# 3. Datos sensibles o pesados (Regla de oro de Data Science)
+.env
+data/raw/
+*.csv
+*.xlsx
