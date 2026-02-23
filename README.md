@@ -32,3 +32,4 @@ dropshipping_data_analyzer/
 ├── main.py                       # Script principal de ejecución
 ├── .gitignore                    # Archivos excluidos de control de versiones
 └── README.md                     # Documentación del proyecto
+

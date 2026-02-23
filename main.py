@@ -1,44 +1,50 @@
 import pandas as pd
-import random
+import os
 from src.processing import calcular_metricas_dropshipping
-
-def generar_datos_prueba() -> pd.DataFrame:
-    """Genera 20 productos de prueba para simular datos extraídos."""
-    random.seed(42)
-
-    data = []
-    for i in range(1, 21):
-        costo = round(random.uniform(5.0, 30.0), 2)
-        precio_venta = round(costo * random.uniform(2.0, 4.0), 2)
-
-        producto = {
-            'product_name': f'Producto_Test_{i}',
-            'category': random.choice(['Hogar', 'Mascotas', 'Tecnología', 'Belleza']),
-            'cost_price': costo,
-            'selling_price': precio_venta,
-            'monthly_sales_volume': random.randint(10, 2000),
-            'ad_spend': round(random.uniform(100.0, 3000.0), 2),
-            'customer_rating': round(random.uniform(3.0, 5.0), 1),
-            'search_trend_score': random.randint(10, 100)
-        }
-        data.append(producto)
-
-    return pd.DataFrame(data)
+from src.data_loader import cargar_datos_reales
 
 if __name__ == "__main__":
-    print("Iniciando análisis de dropshipping...")
+    print("=" * 50)
+    print("  DROPSHIPPING DATA ANALYZER v2.0")
+    print("=" * 50)
 
-    df_crudo = generar_datos_prueba()
-    print(f"Datos obtenidos: {len(df_crudo)} productos.")
+    ruta_raw = 'data/raw/amazon_sales.csv'
 
-    print("Calculando métricas y Score Ganador...")
+    if os.path.exists(ruta_raw):
+        print(f"\n✅ Cargando datos reales desde: {ruta_raw}")
+        df_crudo = cargar_datos_reales(ruta_raw)
+    else:
+        print("\n⚠️  Archivo no encontrado. Usando datos sintéticos...")
+        from src.synthetic_data import generar_datos_prueba
+        df_crudo = generar_datos_prueba()
+
+    print(f"📦 Productos cargados: {len(df_crudo)}")
+
+    print("\n⚙️  Calculando métricas y Score Ganador...")
     df_procesado = calcular_metricas_dropshipping(df_crudo)
 
-    ruta_guardado = 'data/productos_analizados.csv'
-    df_procesado.to_csv(ruta_guardado, index=False)
+    os.makedirs('data/output', exist_ok=True)
+    ruta_salida = 'data/output/productos_analizados.csv'
+    df_procesado.to_csv(ruta_salida, index=False)
+    print(f"💾 Resultados guardados en: {ruta_salida}")
 
-    print(f"\n¡Análisis completado! Resultados guardados en: {ruta_guardado}")
+    print("\n" + "=" * 50)
+    print("       🏆 TOP 5 PRODUCTOS GANADORES")
+    print("=" * 50)
+    top_5 = df_procesado[[
+        'product_name', 'category', 'winner_score',
+        'estimated_roas', 'profit_margin_unit', 'clasificacion'
+    ]].head(5)
+    print(top_5.to_string(index=False))
 
-    print("\n--- TOP 3 PRODUCTOS GANADORES ---")
-    top_3 = df_procesado[['product_name', 'category', 'winner_score', 'estimated_roas']].head(3)
-    print(top_3)
+    print("\n" + "=" * 50)
+    print("       📊 RESUMEN GENERAL")
+    print("=" * 50)
+    print(f"  Total productos analizados : {len(df_procesado)}")
+    print(f"  Productos GANADORES        : {len(df_procesado[df_procesado['clasificacion'] == '🏆 GANADOR'])}")
+    print(f"  Productos POTENCIALES      : {len(df_procesado[df_procesado['clasificacion'] == '⚡ POTENCIAL'])}")
+    print(f"  Productos a DESCARTAR      : {len(df_procesado[df_procesado['clasificacion'] == '❌ DESCARTAR'])}")
+    print(f"  Score promedio             : {df_procesado['winner_score'].mean():.2f}")
+    print(f"  ROAS promedio              : {df_procesado['estimated_roas'].mean():.2f}x")
+    print("=" * 50)
+
